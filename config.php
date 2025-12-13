@@ -1,13 +1,33 @@
 <?php
-// Session settings FIRST
-ini_set('session.gc_maxlifetime', 300);
-ini_set('session.cookie_lifetime', 300);
+// ===============================
+// SESSION SETTINGS (SAFE)
+// ===============================
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.gc_maxlifetime', 300);
+    ini_set('session.cookie_lifetime', 300);
+    session_start();
+}
 
-// Now start session
-session_start();
+// ===============================
+// ADMIN LOGIN CONFIG
+// ===============================
+define('ADMIN_USERNAME', 'tushar');
 
-define('ADMIN_USER', 'tushar');
-define('ADMIN_PASS_HASH', password_hash('Tushar@5111', PASSWORD_BCRYPT));
+// Password: Tushar@5111
+define(
+    'ADMIN_PASSWORD_HASH',
+    '$2y$10$KQ3t4eZ2K6qf6mX8j8lYw.6gqYJc2QqZrGzYcJ7dR7ZxV9p8GZb4G'
+);
 
-define('MAX_SIZE', 1024 * 1024 * 1024); // 1GB
-define('DRIVE_FOLDER_ID', 'YOUR_FOLDER_ID');
+// ===============================
+// UPLOAD LIMIT (1GB)
+// ===============================
+define('MAX_UPLOAD_SIZE', 1024 * 1024 * 1024);
+
+// ===============================
+// GOOGLE DRIVE CONFIG
+// ===============================
+define('GOOGLE_CREDENTIALS_PATH', '/etc/secrets/credentials.json');
+
+// ⚠️ Yaha apna Drive Folder ID paste karna
+define('DRIVE_FOLDER_ID', 'PASTE_YOUR_FOLDER_ID_HERE');
