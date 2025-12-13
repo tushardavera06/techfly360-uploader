@@ -1,15 +1,13 @@
 <?php
 // ===============================
-// SESSION SETTINGS (SAFE)
+// SESSION (SAFE START)
 // ===============================
 if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.gc_maxlifetime', 300);
-    ini_set('session.cookie_lifetime', 300);
     session_start();
 }
 
 // ===============================
-// ADMIN LOGIN CONFIG
+// ADMIN LOGIN DETAILS
 // ===============================
 define('ADMIN_USERNAME', 'tushar');
 
@@ -25,9 +23,9 @@ define(
 define('MAX_UPLOAD_SIZE', 1024 * 1024 * 1024);
 
 // ===============================
-// GOOGLE DRIVE CONFIG
+// GOOGLE DRIVE (Render Secret File)
 // ===============================
 define('GOOGLE_CREDENTIALS_PATH', '/etc/secrets/credentials.json');
 
-// ⚠️ Yaha apna Drive Folder ID paste karna
+// 👇 Apna Drive Folder ID yaha paste karna
 define('DRIVE_FOLDER_ID', 'PASTE_YOUR_FOLDER_ID_HERE');
