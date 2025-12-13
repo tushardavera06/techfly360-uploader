@@ -1,3 +1,6 @@
+echo getenv('GOOGLE_CREDENTIALS_JSON') ? 'ENV OK' : 'ENV NOT FOUND';
+exit;
+
 <?php
 require 'config.php';
 require 'vendor/autoload.php';
