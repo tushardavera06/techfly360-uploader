@@ -1,30 +1,44 @@
 <?php
-require 'config.php';
+require_once 'config.php';
 
-if ($_SERVER['REQUEST_METHOD']==='POST') {
-  if ($_POST['user']===ADMIN_USERNAME &&
-      password_verify($_POST['pass'], ADMIN_PASSWORD_HASH)) {
-    $_SESSION['auth']=true;
-    header('Location: dashboard.php'); exit;
-  }
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $username = $_POST['username'] ?? '';
+    $password = $_POST['password'] ?? '';
+
+    if (
+        $username === ADMIN_USERNAME &&
+        password_verify($password, ADMIN_PASSWORD_HASH)
+    ) {
+        $_SESSION['logged_in'] = true;
+        header("Location: upload.php");
+        exit;
+    } else {
+        $error = "Invalid username or password";
+    }
 }
 ?>
-<!doctype html>
+
+<!DOCTYPE html>
 <html>
 <head>
-<title>Admin Login</title>
-<link rel="stylesheet" href="style.css">
+    <title>Admin Login</title>
 </head>
 <body>
-<div class="card">
-  <h1>Admin Login</h1>
-  <form method="post">
-    <label>Username</label>
-    <input name="user" required>
-    <label>Password</label>
-    <input type="password" name="pass" required>
-    <button>Login</button>
-  </form>
-</div>
+
+<h2>Login</h2>
+
+<?php if ($error): ?>
+<p style="color:red;"><?php echo $error; ?></p>
+<?php endif; ?>
+
+<form method="POST">
+    <input type="text" name="username" placeholder="Username" required><br><br>
+    <input type="password" name="password" placeholder="Password" required><br><br>
+    <button type="submit">Login</button>
+</form>
+
 </body>
 </html>
