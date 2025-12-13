@@ -2,8 +2,8 @@
 require 'config.php';
 
 if ($_SERVER['REQUEST_METHOD']==='POST') {
-  if ($_POST['user']===ADMIN_USER &&
-      password_verify($_POST['pass'], ADMIN_PASS_HASH)) {
+  if ($_POST['user']===ADMIN_USERNAME &&
+      password_verify($_POST['pass'], ADMIN_PASSWORD_HASH)) {
     $_SESSION['auth']=true;
     header('Location: dashboard.php'); exit;
   }
