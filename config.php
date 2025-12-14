@@ -21,4 +21,4 @@ define('MAX_UPLOAD_SIZE', 1024 * 1024 * 1024);
 // GOOGLE DRIVE
 // ===============================
 define('GOOGLE_CREDENTIALS_PATH', '/etc/secrets/credentials.json');
-define('DRIVE_FOLDER_ID', 'PASTE_YOUR_FOLDER_ID_HERE');
+define('DRIVE_FOLDER_ID', '1yhz4GsD-lnJLnCCkMhyZJnY7k9Qh6HCo');
