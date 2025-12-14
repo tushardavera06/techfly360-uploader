@@ -1,21 +1,16 @@
 <?php
 // ===============================
-// SESSION (SAFE START)
+// SESSION
 // ===============================
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
 // ===============================
-// ADMIN LOGIN DETAILS
+// ADMIN LOGIN (DIRECT)
 // ===============================
 define('ADMIN_USERNAME', 'tushar');
-
-// Password: Tushar@5111
-define(
-    'ADMIN_PASSWORD_HASH',
-    '$2y$10$KQ3t4eZ2K6qf6mX8j8lYw.6gqYJc2QqZrGzYcJ7dR7ZxV9p8GZb4G'
-);
+define('ADMIN_PASSWORD', 'Tushar@5111');
 
 // ===============================
 // UPLOAD LIMIT (1GB)
@@ -23,9 +18,7 @@ define(
 define('MAX_UPLOAD_SIZE', 1024 * 1024 * 1024);
 
 // ===============================
-// GOOGLE DRIVE (Render Secret File)
+// GOOGLE DRIVE
 // ===============================
 define('GOOGLE_CREDENTIALS_PATH', '/etc/secrets/credentials.json');
-
-// 👇 Apna Drive Folder ID yaha paste karna
 define('DRIVE_FOLDER_ID', 'PASTE_YOUR_FOLDER_ID_HERE');
