@@ -1,15 +1,12 @@
 <?php
-require_once 'config.php';
+require 'config.php';
 
-$error = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $username = $_POST['username'] ?? '';
-    $password = $_POST['password'] ?? '';
-
-    if ($username === ADMIN_USERNAME && $password === ADMIN_PASSWORD) {
-        $_SESSION['logged_in'] = true;
+if (isset($_POST['login'])) {
+    if (
+        $_POST['username'] === ADMIN_USERNAME &&
+        $_POST['password'] === ADMIN_PASSWORD
+    ) {
+        $_SESSION['admin'] = true;
         header("Location: upload.php");
         exit;
     } else {
@@ -21,50 +18,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Login</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #f2f2f2;
-        }
-        .box {
-            width: 300px;
-            margin: 120px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 0 10px rgba(0,0,0,.1);
-        }
-        input, button {
-            width: 100%;
-            padding: 8px;
-            margin-top: 10px;
-        }
-        button {
-            background: #4f6bed;
-            color: #fff;
-            border: none;
-        }
-        .error {
-            color: red;
-            margin-bottom: 10px;
-        }
-    </style>
+<title>Admin Login</title>
+<style>
+body { font-family: Arial; background:#f4f6f8; }
+.box {
+    width:300px; margin:120px auto; padding:20px;
+    background:#fff; box-shadow:0 0 10px #ccc;
+}
+input, button {
+    width:100%; padding:10px; margin-top:10px;
+}
+button {
+    background:#2563eb; color:#fff; border:none;
+}
+</style>
 </head>
 <body>
 
 <div class="box">
-    <h3>Admin Login</h3>
+<h3>Admin Login</h3>
 
-    <?php if ($error): ?>
-        <div class="error"><?php echo $error; ?></div>
-    <?php endif; ?>
+<?php if (!empty($error)) echo "<p style='color:red'>$error</p>"; ?>
 
-    <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
+<form method="post">
+<input type="text" name="username" placeholder="Username" required>
+<input type="password" name="password" placeholder="Password" required>
+<button name="login">Login</button>
+</form>
 </div>
 
 </body>
