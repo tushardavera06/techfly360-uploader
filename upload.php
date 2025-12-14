@@ -1,20 +1,15 @@
 <?php
-require_once 'config.php';
+require 'config.php';
 
-// 🔐 Login protection
-if (!isset($_SESSION['logged_in'])) {
+if (!isset($_SESSION['admin'])) {
     header("Location: index.php");
     exit;
 }
 
-// Google Client
-require_once __DIR__ . '/vendor/autoload.php';
+require 'vendor/autoload.php';
 
-$client = new Google_Client();
-$client->setAuthConfig(GOOGLE_CREDENTIALS_PATH);
-$client->addScope(Google_Service_Drive::DRIVE);
-
-$service = new Google_Service_Drive($client);
+use Google\Client;
+use Google\Service\Drive;
 
 $message = '';
 
@@ -24,7 +19,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
         $message = "❌ File too large (Max 1GB)";
     } else {
 
-        $fileMetadata = new Google_Service_Drive_DriveFile([
+        $client = new Client();
+        $client->setAuthConfig(GOOGLE_CREDENTIALS_PATH);
+        $client->addScope(Drive::DRIVE);
+
+        $service = new Drive($client);
+
+        $fileMetadata = new Drive\DriveFile([
             'name' => $_FILES['file']['name'],
             'parents' => [DRIVE_FOLDER_ID]
         ]);
@@ -35,12 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
             $fileMetadata,
             [
                 'data' => $content,
-                'mimeType' => $_FILES['file']['type'],
-                'uploadType' => 'multipart'
+                'uploadType' => 'multipart',
+                'supportsAllDrives' => true
             ]
         );
 
-        $message = "✅ File uploaded successfully to Google Drive";
+        $message = "✅ Upload successful";
     }
 }
 ?>
@@ -48,55 +49,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Upload File</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #eef1ff;
-        }
-        .box {
-            width: 350px;
-            margin: 120px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        input, button {
-            width: 100%;
-            padding: 8px;
-            margin-top: 10px;
-        }
-        button {
-            background: #4f6bed;
-            color: white;
-            border: none;
-        }
-        .msg {
-            margin-bottom: 10px;
-            color: green;
-        }
-        .logout {
-            margin-top: 15px;
-            display: block;
-        }
-    </style>
+<title>Upload File</title>
+<style>
+body { font-family: Arial; background:#f4f6f8; }
+.box {
+    width:400px; margin:100px auto; padding:20px;
+    background:#fff; box-shadow:0 0 10px #ccc;
+}
+input, button {
+    width:100%; padding:10px; margin-top:10px;
+}
+button {
+    background:#16a34a; color:#fff; border:none;
+}
+</style>
 </head>
 <body>
 
 <div class="box">
-    <h3>Upload File</h3>
+<h3>Upload to Google Drive</h3>
 
-    <?php if ($message): ?>
-        <div class="msg"><?php echo $message; ?></div>
-    <?php endif; ?>
+<?php if ($message) echo "<p>$message</p>"; ?>
 
-    <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <button type="submit">Upload to Drive</button>
-    </form>
+<form method="post" enctype="multipart/form-data">
+<input type="file" name="file" required>
+<button>Upload</button>
+</form>
 
-    <a class="logout" href="logout.php">Logout</a>
+<br>
+<a href="logout.php">Logout</a>
 </div>
 
 </body>
