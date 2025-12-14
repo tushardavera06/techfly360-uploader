@@ -8,10 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    if (
-        $username === ADMIN_USERNAME &&
-        password_verify($password, ADMIN_PASSWORD_HASH)
-    ) {
+    if ($username === ADMIN_USERNAME && $password === ADMIN_PASSWORD) {
         $_SESSION['logged_in'] = true;
         header("Location: upload.php");
         exit;
@@ -27,16 +24,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Admin Login</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial;
             background: #f2f2f2;
         }
         .box {
             width: 300px;
-            margin: 100px auto;
-            padding: 20px;
+            margin: 120px auto;
             background: #fff;
+            padding: 20px;
             border-radius: 6px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,.1);
         }
         input, button {
             width: 100%;
@@ -47,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: #4f6bed;
             color: #fff;
             border: none;
-            cursor: pointer;
         }
         .error {
             color: red;
