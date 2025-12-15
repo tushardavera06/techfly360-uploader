@@ -1,26 +1,24 @@
 <?php
-// =============================
+// ===============================
 // SESSION
-// =============================
+// ===============================
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// =============================
+// ===============================
 // ADMIN LOGIN
-// =============================
+// ===============================
 define('ADMIN_USERNAME', 'tushar');
 define('ADMIN_PASSWORD', 'Tushar@5111');
 
-// =============================
-// UPLOAD LIMIT (1GB)
-// =============================
-define('MAX_UPLOAD_SIZE', 1024 * 1024 * 1024);
+// ===============================
+// TELEGRAM CONFIG
+// ===============================
+define('BOT_TOKEN', '8370542639:AAFL9iIVbvxPMcqc29Zlg0wQtA3pME4PiQI');
+define('CHANNEL_ID', '-1003582716458');
 
-// =============================
-// GOOGLE DRIVE CONFIG
-// =============================
-define('GOOGLE_CREDENTIALS_PATH', '/etc/secrets/credentials.json');
-
-// ⚠️ SAME FOLDER ID JO DRIVE URL ME HAI
-define('DRIVE_FOLDER_ID', '1yhz4GsD-lnJLnCCkMhyZJnY7k9Qh6HCo');
+// ===============================
+// UPLOAD LIMIT (2GB)
+// ===============================
+define('MAX_UPLOAD_SIZE', 2 * 1024 * 1024 * 1024);
