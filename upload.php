@@ -1,83 +1,66 @@
 <?php
 require 'config.php';
 
-if (!isset($_SESSION['admin'])) {
+if (!isset($_SESSION['login'])) {
     header("Location: index.php");
     exit;
 }
-
-require 'vendor/autoload.php';
-
-use Google\Client;
-use Google\Service\Drive;
 
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
 
     if ($_FILES['file']['size'] > MAX_UPLOAD_SIZE) {
-        $message = "❌ File too large (Max 1GB)";
+        $message = "❌ File too large";
     } else {
 
-        $client = new Client();
-        $client->setAuthConfig(GOOGLE_CREDENTIALS_PATH);
-        $client->addScope(Drive::DRIVE);
+        $filePath = $_FILES['file']['tmp_name'];
+        $fileName = $_FILES['file']['name'];
 
-        $service = new Drive($client);
-
-        $fileMetadata = new Drive\DriveFile([
-            'name' => $_FILES['file']['name'],
-            'parents' => [DRIVE_FOLDER_ID]
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.telegram.org/bot" . BOT_TOKEN . "/sendDocument",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => [
+                'chat_id' => CHANNEL_ID,
+                'document' => new CURLFile($filePath, mime_content_type($filePath), $fileName)
+            ]
         ]);
 
-        $content = file_get_contents($_FILES['file']['tmp_name']);
+        $response = curl_exec($curl);
+        curl_close($curl);
 
-        $service->files->create(
-            $fileMetadata,
-            [
-                'data' => $content,
-                'uploadType' => 'multipart',
-                'supportsAllDrives' => true
-            ]
-        );
-
-        $message = "✅ Upload successful";
+        if ($response) {
+            $message = "✅ File uploaded to Telegram";
+        } else {
+            $message = "❌ Upload failed";
+        }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-<title>Upload File</title>
-<style>
-body { font-family: Arial; background:#f4f6f8; }
-.box {
-    width:400px; margin:100px auto; padding:20px;
-    background:#fff; box-shadow:0 0 10px #ccc;
-}
-input, button {
-    width:100%; padding:10px; margin-top:10px;
-}
-button {
-    background:#16a34a; color:#fff; border:none;
-}
-</style>
+    <title>Upload File</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="box">
-<h3>Upload to Google Drive</h3>
+<div class="upload-box">
+    <h2>Upload File</h2>
 
-<?php if ($message) echo "<p>$message</p>"; ?>
+    <?php if ($message): ?>
+        <p><?= $message ?></p>
+    <?php endif; ?>
 
-<form method="post" enctype="multipart/form-data">
-<input type="file" name="file" required>
-<button>Upload</button>
-</form>
+    <form method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
 
-<br>
-<a href="logout.php">Logout</a>
+    <br>
+    <a href="logout.php">Logout</a>
 </div>
 
 </body>
