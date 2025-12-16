@@ -2,66 +2,59 @@
 require 'config.php';
 
 if (!isset($_SESSION['login'])) {
-    header("Location: index.php");
-    exit;
+    exit("Unauthorized");
 }
 
-$message = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
-
-    if ($_FILES['file']['size'] > MAX_UPLOAD_SIZE) {
-        $message = "❌ File too large";
-    } else {
-
-        $filePath = $_FILES['file']['tmp_name'];
-        $fileName = $_FILES['file']['name'];
-
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-            CURLOPT_URL => "https://api.telegram.org/bot" . BOT_TOKEN . "/sendDocument",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => [
-                'chat_id' => CHANNEL_ID,
-                'document' => new CURLFile($filePath, mime_content_type($filePath), $fileName)
-            ]
-        ]);
-
-        $response = curl_exec($curl);
-        curl_close($curl);
-
-        if ($response) {
-            $message = "✅ File uploaded to Telegram";
-        } else {
-            $message = "❌ Upload failed";
-        }
-    }
+if (!isset($_FILES['file'])) {
+    exit("No file selected");
 }
-?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Upload File</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
 
-<div class="upload-box">
-    <h2>Upload File</h2>
+$file = $_FILES['file'];
 
-    <?php if ($message): ?>
-        <p><?= $message ?></p>
-    <?php endif; ?>
+if ($file['size'] > MAX_UPLOAD_SIZE) {
+    exit("❌ File too large");
+}
 
-    <form method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <button type="submit">Upload</button>
-    </form>
+$tmpPath  = $file['tmp_name'];
+$origName = $file['name'];
 
-    <br>
-    <a href="logout.php">Logout</a>
-</div>
+/* ZIP NAME */
+$custom = trim($_POST['zip_name'] ?? '');
 
-</body>
-</html>
+if ($custom !== '') {
+    $safe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $custom);
+    $zipName = $safe . '.zip';
+} else {
+    $zipName = pathinfo($origName, PATHINFO_FILENAME) . '.zip';
+}
+
+$zipPath = sys_get_temp_dir() . '/' . $zipName;
+
+/* CREATE ZIP */
+$zip = new ZipArchive();
+if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+    exit("❌ ZIP creation failed");
+}
+$zip->addFile($tmpPath, $origName);
+$zip->close();
+
+/* SEND TO TELEGRAM */
+$ch = curl_init("https://api.telegram.org/bot" . BOT_TOKEN . "/sendDocument");
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_POSTFIELDS => [
+        'chat_id' => CHANNEL_ID,
+        'caption' => "📦 Auto ZIP Upload",
+        'document' => new CURLFile($zipPath, 'application/zip', $zipName)
+    ]
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+
+/* CLEANUP */
+@unlink($zipPath);
+
+echo "✅ Upload completed (ZIP stored in Telegram)";
