@@ -1,78 +1,68 @@
 <?php
 require 'config.php';
-if (!isset($_SESSION['login'])) {
-    header('Location: index.php');
-    exit;
-}
+if (!isset($_SESSION['logged_in'])) exit;
 
-$message = '';
+$msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = trim($_POST['title']);
-    $file = $_FILES['file'];
 
-    if ($file['size'] > MAX_UPLOAD_SIZE) {
-        $message = 'File too large';
+    if ($_FILES['file']['size'] > MAX_UPLOAD_SIZE) {
+        $msg = "File too large";
     } else {
-        $zipName = TEMP_DIR . '/' . time() . '.zip';
+
+        $customName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['title']);
+        $tmp = $_FILES['file']['tmp_name'];
+        $zipPath = sys_get_temp_dir() . "/$customName.zip";
+
         $zip = new ZipArchive();
-        $zip->open($zipName, ZipArchive::CREATE);
-        $zip->addFile($file['tmp_name'], $file['name']);
+        $zip->open($zipPath, ZipArchive::CREATE);
+        $zip->addFile($tmp, $_FILES['file']['name']);
         $zip->close();
 
-        $zipSize = filesize($zipName);
+        $zipSize = filesize($zipPath);
 
-        // Telegram upload
-        $ch = curl_init("https://api.telegram.org/bot".BOT_TOKEN."/sendDocument");
-        curl_setopt($ch, CURLOPT_POST, true);
+        $ch = curl_init("https://api.telegram.org/bot".TELEGRAM_BOT_TOKEN."/sendDocument");
+        curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, [
-            'chat_id' => CHANNEL_ID,
-            'document' => new CURLFile($zipName),
-            'caption' => $title
+            'chat_id' => TELEGRAM_CHAT_ID,
+            'document' => new CURLFile($zipPath)
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $res = json_decode(curl_exec($ch), true);
+        $res = curl_exec($ch);
         curl_close($ch);
 
-        unlink($zipName);
+        $res = json_decode($res, true);
+        $fileId = $res['result']['document']['file_id'];
 
-        if ($res['ok']) {
-            $entry = [
-                'title' => $title,
-                'zip_size' => $zipSize,
-                'date' => date('d M Y H:i'),
-                'telegram_link' => "https://t.me/c/".str_replace('-100','',CHANNEL_ID)."/".$res['result']['message_id']
-            ];
-            $old = file_exists(DATA_FILE) ? json_decode(file_get_contents(DATA_FILE), true) : [];
-            $old[] = $entry;
-            file_put_contents(DATA_FILE, json_encode($old, JSON_PRETTY_PRINT));
-            $message = 'File uploaded successfully';
-        } else {
-            $message = 'Telegram upload failed';
-        }
+        $history = json_decode(file_get_contents(HISTORY_FILE), true);
+        $history[] = [
+            'name' => $customName,
+            'zip_size' => $zipSize,
+            'date' => date('Y-m-d H:i'),
+            'telegram_link' => "https://t.me/c/".substr(TELEGRAM_CHAT_ID,4)
+        ];
+        file_put_contents(HISTORY_FILE, json_encode($history, JSON_PRETTY_PRINT));
+
+        $msg = "✅ Uploaded to Telegram";
     }
 }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="style.css">
 <title>Upload</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="card">
 <h2>Upload File (Auto ZIP)</h2>
-<?php if($message): ?><p class="success"><?= $message ?></p><?php endif; ?>
-
 <form method="post" enctype="multipart/form-data">
-<input name="title" placeholder="File name / title" required>
+<input name="title" placeholder="ZIP Name" required>
 <input type="file" name="file" required>
 <button>Upload</button>
 </form>
-
-<a href="dashboard.php">⬅ Back</a>
+<p><?= $msg ?></p>
+<a href="dashboard.php">Back</a>
 </div>
-
 </body>
 </html>
