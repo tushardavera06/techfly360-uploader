@@ -1,25 +1,31 @@
 <?php
-// ================= SESSION =================
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// ================= LOGIN =================
+/* =====================
+   ADMIN LOGIN
+===================== */
 define('ADMIN_USERNAME', 'tushar');
 define('ADMIN_PASSWORD', 'Tushar@5111');
 
-// ================= TELEGRAM =================
-define('BOT_TOKEN', 'PASTE_YOUR_BOT_TOKEN');
-define('CHANNEL_ID', '-1003582716458');
-
-// ================= UPLOAD =================
+/* =====================
+   UPLOAD SETTINGS
+===================== */
 define('MAX_UPLOAD_SIZE', 1024 * 1024 * 1024); // 1GB
 define('AUTO_ZIP', true);
 
-// ================= STORAGE =================
-define('DATA_FILE', __DIR__ . '/history.json');
-define('TEMP_DIR', __DIR__ . '/tmp');
+/* =====================
+   TELEGRAM CONFIG
+===================== */
+define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN'));
+define('TELEGRAM_CHAT_ID', '-1003582716458');
 
-if (!file_exists(TEMP_DIR)) {
-    mkdir(TEMP_DIR, 0777, true);
+/* =====================
+   STORAGE FILE
+===================== */
+define('HISTORY_FILE', __DIR__ . '/history.json');
+
+if (!file_exists(HISTORY_FILE)) {
+    file_put_contents(HISTORY_FILE, json_encode([]));
 }
