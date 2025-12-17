@@ -1,68 +1,48 @@
 <?php
-require 'config.php';
-if (!isset($_SESSION['logged_in'])) exit;
+require "config.php";
 
-$msg = '';
+if(!isset($_FILES['file'])) exit;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+$name = preg_replace("/[^a-zA-Z0-9_-]/","_",$_POST['filename']);
+$tmp  = $_FILES['file']['tmp_name'];
 
-    if ($_FILES['file']['size'] > MAX_UPLOAD_SIZE) {
-        $msg = "File too large";
-    } else {
+$zipPath = sys_get_temp_dir()."/".$name.".zip";
 
-        $customName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['title']);
-        $tmp = $_FILES['file']['tmp_name'];
-        $zipPath = sys_get_temp_dir() . "/$customName.zip";
+$zip = new ZipArchive();
+$zip->open($zipPath, ZipArchive::CREATE);
+$zip->addFile($tmp, $_FILES['file']['name']);
+$zip->close();
 
-        $zip = new ZipArchive();
-        $zip->open($zipPath, ZipArchive::CREATE);
-        $zip->addFile($tmp, $_FILES['file']['name']);
-        $zip->close();
+/* Telegram upload */
+$url = "https://api.telegram.org/bot".BOT_TOKEN."/sendDocument";
+$post = [
+"chat_id"=>CHAT_ID,
+"document"=> new CURLFile($zipPath)
+];
 
-        $zipSize = filesize($zipPath);
+$ch = curl_init();
+curl_setopt_array($ch,[
+CURLOPT_URL=>$url,
+CURLOPT_POST=>true,
+CURLOPT_RETURNTRANSFER=>true,
+CURLOPT_POSTFIELDS=>$post
+]);
+$res = curl_exec($ch);
+curl_close($ch);
 
-        $ch = curl_init("https://api.telegram.org/bot".TELEGRAM_BOT_TOKEN."/sendDocument");
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, [
-            'chat_id' => TELEGRAM_CHAT_ID,
-            'document' => new CURLFile($zipPath)
-        ]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $res = curl_exec($ch);
-        curl_close($ch);
+$data = json_decode($res,true);
+$link = "https://t.me/c/".str_replace("-100","",CHAT_ID)."/".$data['result']['message_id'];
 
-        $res = json_decode($res, true);
-        $fileId = $res['result']['document']['file_id'];
+$history = file_exists("history.json")
+? json_decode(file_get_contents("history.json"),true)
+: [];
 
-        $history = json_decode(file_get_contents(HISTORY_FILE), true);
-        $history[] = [
-            'name' => $customName,
-            'zip_size' => $zipSize,
-            'date' => date('Y-m-d H:i'),
-            'telegram_link' => "https://t.me/c/".substr(TELEGRAM_CHAT_ID,4)
-        ];
-        file_put_contents(HISTORY_FILE, json_encode($history, JSON_PRETTY_PRINT));
+$history[]=[
+"name"=>$name,
+"bytes"=>filesize($zipPath),
+"date"=>date("d M Y H:i"),
+"link"=>$link
+];
 
-        $msg = "✅ Uploaded to Telegram";
-    }
-}
-?>
-<!DOCTYPE html>
-<html>
-<head>
-<title>Upload</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="card">
-<h2>Upload File (Auto ZIP)</h2>
-<form method="post" enctype="multipart/form-data">
-<input name="title" placeholder="ZIP Name" required>
-<input type="file" name="file" required>
-<button>Upload</button>
-</form>
-<p><?= $msg ?></p>
-<a href="dashboard.php">Back</a>
-</div>
-</body>
-</html>
+file_put_contents("history.json",json_encode($history,JSON_PRETTY_PRINT));
+unlink($zipPath);
