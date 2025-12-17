@@ -1,40 +1,36 @@
 <?php
 require 'config.php';
 
-if (isset($_SESSION['login'])) {
-    header('Location: dashboard.php');
+if (isset($_SESSION['logged_in'])) {
+    header("Location: dashboard.php");
     exit;
 }
 
 $error = '';
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (
-        $_POST['username'] === ADMIN_USERNAME &&
-        $_POST['password'] === ADMIN_PASSWORD
-    ) {
-        $_SESSION['login'] = true;
-        header('Location: dashboard.php');
+    if ($_POST['username'] === ADMIN_USERNAME && $_POST['password'] === ADMIN_PASSWORD) {
+        $_SESSION['logged_in'] = true;
+        header("Location: dashboard.php");
         exit;
     } else {
-        $error = 'Invalid username or password';
+        $error = "Invalid login";
     }
 }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-<link rel="stylesheet" href="style.css">
 <title>Login</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="card">
 <h2>Admin Login</h2>
-<?php if($error): ?><p class="error"><?= $error ?></p><?php endif; ?>
 <form method="post">
 <input name="username" placeholder="Username" required>
-<input name="password" type="password" placeholder="Password" required>
+<input type="password" name="password" placeholder="Password" required>
 <button>Login</button>
+<p style="color:red"><?= $error ?></p>
 </form>
 </div>
 </body>
